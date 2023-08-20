@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  database:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: ${DB_NAME:-app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_USER: ${DB_USER:-app}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_EXTERNAL_PORT}:5432"
+
+  php:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        LINUX_USER_ID: ${LINUX_USER_ID:-501}
+    depends_on:
+      - database
+    environment:
+      XDEBUG_CONFIG: client_host=${XDEBUG_REMOTE_HOST} client_port=${XDEBUG_REMOTE_PORT}
+      PHP_IDE_CONFIG: serverName=${SERVER_NAME}
+    volumes:
+      - ./symfony/:/srv/app
+    ports:
+      - "8200:8000"
+
+volumes:
+  pg_data:
